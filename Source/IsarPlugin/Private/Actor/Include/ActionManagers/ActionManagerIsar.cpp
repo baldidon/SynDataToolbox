@@ -7,6 +7,12 @@ const FString IActionManagerIsar::GetActionManagerName() const
 	return FString();
 }
 
+const FString IActionManagerIsar::GetActionManagerSetup() const
+{
+	//in this method are stored commands and other setup info
+	return FString("@{}");
+}
+
 const bool IActionManagerIsar::IsActionManagerName(const FString& Name) const
 {
 	if (Name == GetActionManagerName())

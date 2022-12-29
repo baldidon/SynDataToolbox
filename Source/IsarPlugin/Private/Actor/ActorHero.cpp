@@ -105,7 +105,6 @@ const bool AActorHero::SendSensorsList()
 	{
 		const FString SensorName = Sensor->GetSensorName();
 		SensorNameList += SensorName;
-		//UE_LOG(LogTemp,Warning,TEXT("%i"), Sensor->GetObservationSize())
 		SensorNameList += "#"+FString::FromInt(Sensor->GetObservationSize())+"@"+Sensor->GetSensorSetup() + " ";
 	}
 	const int32 StringLength = SensorNameList.Len();
@@ -122,9 +121,10 @@ const bool AActorHero::SendActionManagersList()
 	{
 		const FString ActionManagerName = ActionManager->GetActionManagerName();
 		ActionManagersNameList += ActionManagerName;
-		ActionManagersNameList += " ";
+		ActionManagersNameList += "#" + ActionManager->GetActionManagerSetup()+" ";
 	}
 	const int32 StringLength = ActionManagersNameList.Len();
+	UE_LOG(LogTemp, Error, TEXT("%s"), *ActionManagersNameList)
 	HeroSocket->SendBytes(TCHAR_TO_ANSI(*ActionManagersNameList), StringLength);
 
 	return true;
@@ -189,12 +189,19 @@ const bool AActorHero::ChangeSensorsSettings(TArray<FString>& FieldArray) const
 	bool bChangeSensorsSettingsSuccessful = false;
 
 	const FString SensorName = FieldArray[0];
+	FString new_buf = "";
 	FieldArray.RemoveAt(0);
 	for(auto Sensor: SensorsList)
 	{
 		if (Sensor->IsSensorName(SensorName))
 		{
 			bChangeSensorsSettingsSuccessful = Sensor->ChangeSensorSettings(FieldArray);
+			if (bChangeSensorsSettingsSuccessful) {
+				new_buf = "";
+				new_buf = FString::FromInt(Sensor->GetObservationSize());
+				int32 StringLength = new_buf.Len();
+				HeroSocket->SendBytes(TCHAR_TO_ANSI(*new_buf), StringLength);
+			}
 			break;
 		}
 	}
@@ -231,28 +238,54 @@ const bool AActorHero::PerformAction(TArray<FString>& FieldArray)
 	bool bPerformActionSuccessful = true;
 	bool bHit = false;
 
-	for (auto Command = FieldArray.CreateConstIterator(); Command; ++Command)
-	{
-		TArray<FString> Action;
-		Command->ParseIntoArray(Action, TEXT(";"), true);
-
-		const int8_t PerformActionCode = CurrentActionManager->PerformAction(Action);
-
-		if (PerformActionCode == -1)
+	const FString ActionManagerName = FieldArray[0];
+	FieldArray.RemoveAt(0);
+	FString Command = FieldArray[0];
+	for (auto ActionManager : ActionManagersList) {
+		if (ActionManager->IsActionManagerName(ActionManagerName))
 		{
-			bPerformActionSuccessful = false;
-		}
-		if (bPerformActionSuccessful)
-		{
-			if (PerformActionCode != 0)
+			TArray<FString> Action;
+			Command.ParseIntoArray(Action, TEXT(";"), true);
+			const int8_t PerformActionCode = ActionManager->PerformAction(Action);
+			if (PerformActionCode == -1)
 			{
-				bHit = true;
+				bPerformActionSuccessful = false;
 			}
+			if (bPerformActionSuccessful)
+			{
+				if (PerformActionCode != 0)
+				{
+					bHit = true;
+				}
+			}
+			HeroSocket->SendBytes(&bHit, 1);
+
+			return bPerformActionSuccessful;
 		}
 	}
-	HeroSocket->SendBytes(&bHit, 1);
 
-	return bPerformActionSuccessful;
+	//for (auto Command = FieldArray.CreateConstIterator(); Command; ++Command)
+	//{
+	//	TArray<FString> Action;
+	//	Command->ParseIntoArray(Action, TEXT(";"), true);
+
+	//	const int8_t PerformActionCode = CurrentActionManager->PerformAction(Action);
+
+	//	if (PerformActionCode == -1)
+	//	{
+	//		bPerformActionSuccessful = false;
+	//	}
+	//	if (bPerformActionSuccessful)
+	//	{
+	//		if (PerformActionCode != 0)
+	//		{
+	//			bHit = true;
+	//		}
+	//	}
+	//}
+	//HeroSocket->SendBytes(&bHit, 1);
+
+	//return bPerformActionSuccessful;
 }
 
 const bool AActorHero::PerformReset(TArray<FString>& FieldArray)
@@ -293,11 +326,11 @@ void AActorHero::ParseCommand(const FString PythonCommand)
 			bValidCommand = SendResetManagersList();
 			if (!bValidCommand) UE_LOG(LogTemp, Error, TEXT("RESETS"));
 		} break;
-		case SETACTIONMAN:
-		{
-			bValidCommand = SetCurrentActionManager(FieldArray);
-			if (!bValidCommand) UE_LOG(LogTemp, Error, TEXT("SETACTIONMAN"));
-		} break;
+		//case SETACTIONMAN:
+		//{
+		//	bValidCommand = SetCurrentActionManager(FieldArray);
+		//	if (!bValidCommand) UE_LOG(LogTemp, Error, TEXT("SETACTIONMAN"));
+		//} break;
 		case SETRESETMAN:
 		{
 			bValidCommand = SetCurrentResetManager(FieldArray);

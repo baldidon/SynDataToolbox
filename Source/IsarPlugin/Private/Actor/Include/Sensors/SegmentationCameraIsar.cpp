@@ -12,6 +12,10 @@ ASegmentationCameraIsar::ASegmentationCameraIsar()
 		ConstructorHelpers::FObjectFinder<UTextureRenderTarget2D> RenderTargetAsset(TEXT("/IsarPlugin/SegmentationRenderTarget"));
 		RenderTarget = DuplicateObject(RenderTargetAsset.Object, RenderTarget);
 	}
+	if (!BaseMaterial) {
+		ConstructorHelpers::FObjectFinder<UMaterialInterface> MaterialAsset(TEXT("/IsarPlugin/Materials/Segmentation_base_material"));
+		BaseMaterial = MaterialAsset.Object;
+	}
 	LevelManager = nullptr;
 	LastObservation = nullptr;
 	ActorsToHide.Empty();
@@ -24,9 +28,12 @@ void ASegmentationCameraIsar::BeginPlay()
 
 	if (!LevelManager) {
 		LevelManager = GetGameInstance()->GetSubsystem<ULevelManagerIsar>();
-		LevelManager->SetWorldReference(GetWorld());
-		LevelManager->SetBaseMaterial(BaseMaterial);
-		LevelManager->SetObjectsToIdentify(Classes);
+		LevelManager->SetSegmentation(true);
+		if (!LevelManager->IsWorldReferenceDefined())
+			LevelManager->SetWorldReference(GetWorld());
+		if(!LevelManager->IsMaterialDefined())
+			LevelManager->SetBaseMaterial(BaseMaterial);
+		LevelManager->SetSegmentationObjectsToIdentify(Classes);
 	}
 	InitSensor();
 
@@ -41,6 +48,7 @@ void ASegmentationCameraIsar::TakePeriodicObs()
 {
 	TakeObs();
 }
+
 
 FString ASegmentationCameraIsar::ClassesMapToString()
 {
@@ -98,7 +106,41 @@ const FString ASegmentationCameraIsar::GetSensorSetup()
 
 const bool ASegmentationCameraIsar::ChangeSensorSettings(const TArray<FString>& Settings)
 {
-    return false;
+	if (Settings.Num() == 4)
+	{
+		while (LevelManager->IsBusy() || bIsBusy) {}
+		bIsBusy = true;
+		Width = FCString::Atoi(*Settings[0]);
+		Height = FCString::Atoi(*Settings[1]);
+		FOV = FCString::Atoi(*Settings[2]);
+		Camera->FOVAngle = FOV;
+		RenderTarget->ResizeTarget(Width, Height);
+		RenderTarget->UpdateResourceImmediate();
+		LastObservation = new uint8[GetObservationSize()];
+		Classes.Empty();
+		Classes = ParseDictFromString(*Settings[3]);
+		LevelManager->SetSegmentationObjectsToIdentify(Classes);//handle change classes, into LevelManager
+		Modified = true;
+		bIsBusy = false;
+		return true;
+	}
+	else if (Settings.Num() == 3)
+	{
+		//CASE WITH NO CLASSES GIVEN
+		Width = FCString::Atoi(*Settings[0]);
+		Height = FCString::Atoi(*Settings[1]);
+		FOV = FCString::Atoi(*Settings[2]);
+		Camera->FOVAngle = FOV;
+		RenderTarget->ResizeTarget(Width, Height);
+		RenderTarget->UpdateResourceImmediate();
+		LastObservation = new uint8[GetObservationSize()];
+		return true;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid Settings."))
+			return false;
+	}
 }
 
 const bool ASegmentationCameraIsar::GetLastObs(uint8* Buffer)
@@ -106,7 +148,13 @@ const bool ASegmentationCameraIsar::GetLastObs(uint8* Buffer)
 	//result stored into LastObservation
 	while (bIsBusy) {}
 	if (LastObservation!=nullptr) {
+		if (Modified) {
+			TakeObs();
+			Modified = false;
+		}
+		bIsBusy = true;
 		memcpy(Buffer, LastObservation, GetObservationSize());
+		bIsBusy = false;
 		return true;
 	}
 	return false;
@@ -116,7 +164,7 @@ const bool ASegmentationCameraIsar::TakeObs()
 {
 	bool ReadIsSuccessful = true;
 	while (bIsBusy) {/*Waiting*/ }
-	if (LevelManager->GetLevelMode() == 0) {
+	if (LevelManager->GetLevelMode() != 1) {
 		while (LevelManager->IsBusy()) {
 			UE_LOG(LogTemp, Error, TEXT("Level manager is busy..."))
 		}
@@ -126,7 +174,6 @@ const bool ASegmentationCameraIsar::TakeObs()
 	if (ActorsToHide.Num() != 0) {
 		Camera->HiddenActors = ActorsToHide;
 	}
-
 	//get level snapshot
 	Camera->CaptureScene();
 	LastObservationTimestamp = FDateTime::Now().ToString();
@@ -152,4 +199,22 @@ const void ASegmentationCameraIsar::SetTickMode(bool Value)
 {
 	enableIndependentTick = Value;
 	PrimaryActorTick.bCanEverTick = enableIndependentTick;
+}
+
+TMap<FString, int> ASegmentationCameraIsar::ParseDictFromString(FString Str)
+{
+	TMap<FString, int> NewDict = TMap<FString, int>();
+	NewDict.Add("Others", 0);
+	int len = Str.Len();
+	FString Delim = ":";
+	TArray<FString> KeyValueStringArray = TArray<FString>();
+	Str.ParseIntoArray(KeyValueStringArray, TEXT(","));
+	for (FString kvs : KeyValueStringArray) {
+		TArray<FString> KeyValue = TArray<FString>();
+		kvs.ParseIntoArray(KeyValue, TEXT(":"));
+		int Index = FCString::Atoi(*KeyValue[1]);
+		NewDict.Add(KeyValue[0], Index);
+	}
+
+	return NewDict;
 }

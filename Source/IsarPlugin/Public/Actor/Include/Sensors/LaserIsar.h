@@ -45,8 +45,10 @@ public:
 		float DistanceAngleY=0.0f;
 	UPROPERTY(EditAnywhere, Category = "LaserSettings")
 		float LaserRange=0.0f;
+	UPROPERTY()
+		bool Modified = false;
 	UPROPERTY(EditAnywhere, Category = "LaserSettings")
-		int Render=0;
+		int Render=1;
 	bool bIsBusy = false; // reader-Writer sync
 
 

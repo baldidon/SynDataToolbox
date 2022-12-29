@@ -55,6 +55,8 @@ public:
 		bool enableIndependentTick = true; //
 	UPROPERTY() 
 		UStaticMeshComponent* Mesh;
+	UPROPERTY()
+		bool Modified = false;
 	UPROPERTY(EditAnywhere, Category = "SensorProperties|Camera")
 		uint32 Width = 128;
 	UPROPERTY(EditAnywhere, Category = "SensorProperties|Camera")

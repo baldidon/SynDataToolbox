@@ -6,14 +6,9 @@
 // Sets default values
 ALaserIsar::ALaserIsar()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	//EXPERIMENTAL: 
 	PrimaryActorTick.bCanEverTick = enableIndependentTick;
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-	//ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMesh(TEXT("/IsarPlugin/SensorMesh"));
-	//Mesh->SetStaticMesh(DuplicateObject(StaticMesh.Object, NULL));
 	SetRootComponent(Mesh);
-
 }
 
 // Called when the game starts or when spawned
@@ -135,7 +130,7 @@ const FString ALaserIsar::GetSensorSetup()
 const bool ALaserIsar::ChangeSensorSettings(const TArray<FString>& Settings)
 {
 	while(bIsBusy){}
-	if (Settings.Num() == 9)
+	if (Settings.Num() == 8)
 	{
 		bIsBusy = true;
 		StartAngleX = FCString::Atof(*Settings[0]);
@@ -146,9 +141,9 @@ const bool ALaserIsar::ChangeSensorSettings(const TArray<FString>& Settings)
 		DistanceAngleY = FCString::Atof(*Settings[5]);
 		LaserRange = FCString::Atof(*Settings[6]);
 		Render = FCString::Atoi(*Settings[7]);
-		TimeSampling = FCString::Atof(*Settings[8]);
 		LastObservation = new uint8[GetObservationSize()];
 		bIsBusy = false;
+		Modified = true;
 		return true;
 	}
 	else
@@ -162,8 +157,12 @@ const bool ALaserIsar::GetLastObs(uint8* Buffer)
 {
 	while (bIsBusy) {}
 	if (LastObservation) {
+		if (Modified) {
+			TakeObs();
+			Modified = false;
+		}
 		bIsBusy = true;
-		Buffer = LastObservation;
+		memcpy(Buffer, LastObservation, GetObservationSize());
 		bIsBusy = false;
 		return true;
 	}
@@ -174,7 +173,7 @@ const bool ALaserIsar::GetLastObs(uint8* Buffer)
 
 const FString ALaserIsar::GetSensorName()
 {
-	return "LaserIsar("+GetActorLabel()+")";
+	return "Laser("+GetActorLabel()+")";
 }
 
 const void ALaserIsar::SetTickMode(bool Value)

@@ -23,6 +23,7 @@ public:
 
 
 	virtual const FString GetActionManagerName() const override;
+	virtual const FString GetActionManagerSetup() const override;
 	virtual const int ActionToID(const FString& Action) const override;
 	virtual const bool InitSettings(const TArray<FString>& Settings) override;
 	virtual const int8_t PerformAction(TArray<FString>& Action) override;
@@ -47,20 +48,19 @@ protected:
 	static const int STRAIGHT = 1;
 	static const int GOUP = 2;
 
-	FVector MovementVectorInput;
-
 	FHitResult* ActorHit;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 		USpringArmComponent* CameraSpringArm;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		UStaticMeshComponent* Mesh;
 
 	//UPROPERTY(EditAnywhere, Category="Isar | Meshes")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		UStaticMesh* StaticMesh;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		UCameraComponent* CameraComponent;
 
 public:	

@@ -14,6 +14,7 @@ class ISARPLUGIN_API IActionManagerIsar
 public:
     /** Add interface function declarations here */
     virtual const FString GetActionManagerName() const;
+    virtual const FString GetActionManagerSetup() const; 	//in this method are stored commands and other setup info
     virtual const bool IsActionManagerName(const FString& Name) const;
     virtual const bool InitSettings(const TArray<FString>& Settings); //useless with new api version
     virtual const int8_t PerformAction(TArray<FString>& Action);

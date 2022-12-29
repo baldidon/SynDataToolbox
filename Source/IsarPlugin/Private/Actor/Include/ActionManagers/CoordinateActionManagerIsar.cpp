@@ -7,17 +7,34 @@ ACoordinateActionManagerIsar::ACoordinateActionManagerIsar()
 
 	//qui ha senso definire una shape di base
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-	ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMesh(TEXT("/IsarPlugin/SensorMesh"));  //TODO: USARE UNA MESH SPECIFICA
-	Mesh->SetStaticMesh(DuplicateObject(StaticMesh.Object, NULL));
+	CameraSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
+	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	SetRootComponent(Mesh);
+	ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshAsset(TEXT("/IsarPlugin/SensorMesh"));  //TODO: USARE UNA MESH SPECIFICA
+	Mesh->SetStaticMesh(StaticMeshAsset.Object);
+	Mesh->SetRelativeScale3D(FVector(0.5f, 0.5f, 0.5f));
+	CameraSpringArm->SetupAttachment(Mesh);
+	CameraComponent->SetupAttachment(CameraSpringArm);
+	CameraSpringArm->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, 50.0f), FRotator(-45.0f, 0.0f, 0.0f));
+	CameraSpringArm->TargetArmLength = 300.f;
 
-	//create hit
-	ActorHit = new FHitResult();  //init the info object
+	// Create hit
+	ActorHit = new FHitResult();	// Initialize the hit info object
+}
+
+void ACoordinateActionManagerIsar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+
 }
 
 const FString ACoordinateActionManagerIsar::GetActionManagerName() const
 {
-	return "CoordinateActionManagerIsar("+GetActorLabel() + ")";
+	return "CoordinateActionManager("+GetActorLabel() + ")";
+}
+
+const FString ACoordinateActionManagerIsar::GetActionManagerSetup() const
+{
+	return FString("MOVETO@{}");
 }
 
 const int ACoordinateActionManagerIsar::ActionToID(const FString& Action) const
@@ -62,6 +79,16 @@ const int8_t ACoordinateActionManagerIsar::PerformAction(TArray<FString>& Action
 	}
 
 	return PerformActionCode;
+}
+
+void ACoordinateActionManagerIsar::Possess()
+{
+	GetWorld()->GetFirstPlayerController()->Possess(this);
+}
+
+void ACoordinateActionManagerIsar::UnPossess()
+{
+	GetWorld()->GetFirstPlayerController()->UnPossess();
 }
 
 const int8_t ACoordinateActionManagerIsar::MoveTo(TArray<FString>& Parameters)

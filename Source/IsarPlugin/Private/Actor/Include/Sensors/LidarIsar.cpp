@@ -67,8 +67,7 @@ const bool ALidarIsar::ChangeSensorSettings(const TArray<FString>& Settings)
 {
 	if (Settings.Num() == 8)
 	{
-		while(bIsBusy){}
-		bIsBusy = false;
+		bIsBusy = true;
 		StartAngleX = FCString::Atof(*Settings[0]);
 		EndAngleX = FCString::Atof(*Settings[1]);
 		DistanceAngleX = FCString::Atof(*Settings[2]);
@@ -78,6 +77,7 @@ const bool ALidarIsar::ChangeSensorSettings(const TArray<FString>& Settings)
 		LaserRange = FCString::Atof(*Settings[6]);
 		Render = FCString::Atoi(*Settings[7]);
 		LastObservation = new uint8[GetObservationSize()];
+		Modified = true;
 		bIsBusy = false;
 		return true;
 	}
@@ -92,8 +92,12 @@ const bool ALidarIsar::GetLastObs(uint8* Buffer)
 {
 	while (bIsBusy) {}
 	if (LastObservation) {
+		if (Modified) {
+			TakeObs();
+			Modified = false;
+		}
 		bIsBusy = true;
-		Buffer = LastObservation;
+		memcpy(Buffer, LastObservation, GetObservationSize());
 		bIsBusy = false;
 		return true;
 	}
@@ -188,7 +192,7 @@ const bool ALidarIsar::TakeObs()
 
 const FString ALidarIsar::GetSensorName()
 {
-	return "LidarIsar("+GetActorLabel() + ")";
+	return "Lidar("+GetActorLabel() + ")";
 }
 
 const void ALidarIsar::SetTickMode(bool Value)

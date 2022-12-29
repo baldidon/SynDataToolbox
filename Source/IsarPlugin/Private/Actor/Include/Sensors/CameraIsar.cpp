@@ -79,11 +79,11 @@ const bool ACameraIsar::InitSensor()
 	//Camera->CaptureSource =	SCS_SceneDepth;
 	Camera->bCaptureEveryFrame = false;
 	Camera->bCaptureOnMovement = false;
-	LastObservation = new uint8[GetObservationSize()];
 	Camera->FOVAngle = FOV;
 	RenderTarget->InitCustomFormat(Width, Height, EPixelFormat::PF_FloatRGBA, true);
 	RenderTarget->TargetGamma = 3.0;
 	RenderTarget->UpdateResourceImmediate();
+	LastObservation = new uint8[GetObservationSize()];
 
 	return true;
 }
@@ -91,26 +91,19 @@ const bool ACameraIsar::InitSensor()
 const bool ACameraIsar::ChangeSensorSettings(const TArray<FString>& Settings)
 {
 	//in this case, Settings are given by python
-	if (Settings.Num() == 4)
+	if (Settings.Num() == 3)
 	{
-		Width = FCString::Atoi(*Settings[0]);
-		Height = FCString::Atoi(*Settings[1]);
-		FOV = FCString::Atoi(*Settings[2]);
-		TimeSampling = FCString::Atof(*Settings[3]);
-		Camera->FOVAngle = FOV;
-		RenderTarget->ResizeTarget(Width, Height);
-		RenderTarget->UpdateResourceImmediate();
-		return true;
-	}
-	else if (Settings.Num() == 3) 
-	 {
-		//case with time sampling is not given
+		while(LevelManager->IsBusy() || bIsBusy){}
+		bIsBusy = true;
 		Width = FCString::Atoi(*Settings[0]);
 		Height = FCString::Atoi(*Settings[1]);
 		FOV = FCString::Atoi(*Settings[2]);
 		Camera->FOVAngle = FOV;
 		RenderTarget->ResizeTarget(Width, Height);
 		RenderTarget->UpdateResourceImmediate();
+		LastObservation = new uint8[GetObservationSize()];
+		Modified = true;
+		bIsBusy = false;
 		return true;
 	}
 	else
@@ -122,15 +115,15 @@ const bool ACameraIsar::ChangeSensorSettings(const TArray<FString>& Settings)
 
 const bool ACameraIsar::GetLastObs(uint8* Buffer)
 {
-	//result stored into LastObservation
-	while (bIsBusy) {
-	}
-	if (LastObservation != nullptr)
-	{
+	while(bIsBusy){}
+	if (LastObservation != nullptr){
+		if (Modified) {
+			TakeObs();
+			Modified = false;
+		}
 		bIsBusy = true;
 		memcpy(Buffer,LastObservation,GetObservationSize());
 		bIsBusy = false;
-		
 		return true;
 	}
 	return false;
@@ -140,7 +133,7 @@ const bool ACameraIsar::TakeObs()
 {
 	bool ReadIsSuccessful;
 	while (bIsBusy) {/*Waiting*/ }
-	if (LevelManager->GetLevelMode() == 1) {
+	if (LevelManager->GetLevelMode() != 0) {
 		while (LevelManager->IsBusy()) {
 			UE_LOG(LogTemp, Error, TEXT("Level manager is busy..."))
 		}

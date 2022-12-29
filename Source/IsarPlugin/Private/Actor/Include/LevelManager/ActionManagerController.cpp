@@ -1,5 +1,4 @@
 #include "Actor/Include/LevelManager/ActionManagerController.h"
-#include <Actor/Include/ActionManagers/DroneActionManagerIsar.h>
 
 void AActionManagerController::SetupInputComponent()
 {
@@ -8,6 +7,7 @@ void AActionManagerController::SetupInputComponent()
 	ActionManagers = TArray<IActionManagerIsar*>();
 	InputComponent->BindAction("Switch_Up", IE_Pressed, this, &AActionManagerController::SwitchUp);
 	InputComponent->BindAction("Switch_Down", IE_Pressed, this, &AActionManagerController::SwitchDown);
+	InputComponent->BindAction("Restore_Default", IE_Pressed, this, &AActionManagerController::RestoreDefaultPawn);
 
 }
 
@@ -45,9 +45,18 @@ void AActionManagerController::SwitchDown()
 	}
 }
 
+void AActionManagerController::RestoreDefaultPawn()
+{
+	UnPossess();
+	IndexCurrentActionManager = -1;
+	Possess(DefaultPawn);
+}
+
 void AActionManagerController::SetupActorListToPossess(TArray<IActionManagerIsar*> ActionManagerList)
 {
 	for (auto AManager : ActionManagerList) {
 		ActionManagers.Add(AManager);
 	}
+	DefaultPawn = GetPawn();
+
 }

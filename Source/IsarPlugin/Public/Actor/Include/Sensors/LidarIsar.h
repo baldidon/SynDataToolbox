@@ -46,6 +46,9 @@ public:
 		float LaserRange = 0.0f;
 	UPROPERTY(EditAnywhere, Category = "LaserSettings")
 		int Render = 0;
+	UPROPERTY()
+		bool Modified = false;
+
 	bool bIsBusy = false; // reader-Writer sync
 
 

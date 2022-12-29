@@ -25,6 +25,7 @@ public:
 
 
 	virtual const FString GetActionManagerName() const override;
+	virtual const FString GetActionManagerSetup() const override;
 	virtual const int ActionToID(const FString& Action) const override;
 	virtual const bool InitSettings(const TArray<FString>& Settings) override;
 	virtual const int8_t PerformAction(TArray<FString>& Action) override;
@@ -32,24 +33,22 @@ public:
 	virtual void UnPossess() override;
 
 
-
-
 	const int8_t GoForward();
-	void GoForwardCallback(float AxisValue);
+	void GoForwardCallback();
 	const int8_t GoBackward();
-	void GoBackwardCallback(float AxisValue);
+	void GoBackwardCallback();
 	const int8_t TurnRight();
-	void TurnRightCallback(float AxisValue);
+	void TurnRightCallback();
 	const int8_t TurnLeft();
-	void TurnLeftCallback(float AxisValue);
+	void TurnLeftCallback();
 	const int8_t TurnRightGoForward();
-	void TurnRightGoForwardCallback(float AxisValue);
+	void TurnRightGoForwardCallback();
 	const int8_t TurnLeftGoForward();
-	void TurnLeftGoForwardCallback(float AxisValue);
+	void TurnLeftGoForwardCallback();
 	const int8_t TurnRightGoBackward();
-	void TurnRightGoBackwardCallback(float AxisValue);
+	void TurnRightGoBackwardCallback();
 	const int8_t TurnLeftGoBackward();
-	void TurnLeftGoBackwardCallback(float AxisValue);
+	void TurnLeftGoBackwardCallback();
 
 protected:
 	// Called when the game starts or when spawned
@@ -68,26 +67,23 @@ protected:
 
 	FHitResult* ActorHit;
 	
-	
-	UPROPERTY()
-		UStaticMeshComponent* Mesh;
-	
-	//UPROPERTY(EditAnywhere, Category = "Isar | Meshes")
-	UStaticMesh* StaticMesh;
-
 	UPROPERTY(EditAnywhere, Category = "Isar | DiscreteStep")
 		float Speed = 50.0f;
 	
 	UPROPERTY(EditAnywhere, Category = "Isar | DiscreteStep")
 		float RotationSpeed = 50.0f;
 
-	UPROPERTY(EditAnywhere)
-		USpringArmComponent* CameraSpringArm;
-
-
-	UPROPERTY(EditAnywhere)
+	USpringArmComponent* CameraSpringArm;
+		
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		UCameraComponent* CameraComponent;
+		
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		UStaticMeshComponent* Mesh;
 
+//UPROPERTY(EditAnywhere, Category = "Isar | Meshes")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		UStaticMesh* StaticMesh;
 
 public:
 	// Called every frame

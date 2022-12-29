@@ -22,9 +22,11 @@ public:
 	//callback functions
 	void SwitchUp();
 	void SwitchDown();
+	void RestoreDefaultPawn();
 	void SetupActorListToPossess(TArray<IActionManagerIsar*> ActionManagerList);
 
 protected:
 	int IndexCurrentActionManager = -1;
 	TArray<IActionManagerIsar*> ActionManagers;
+	APawn* DefaultPawn;
 };

@@ -20,12 +20,16 @@ int UnrealSocketIsar::SendBytes(const void* Buffer, int32 N)
 	int32 TotalSent = 0;
 	int TimeOut = 0;
 
-	uint8 const* DataLength;
-	DataLength = reinterpret_cast<uint8 const*>(&N);
-	ConnectionSocket->Send(DataLength, 4, Sent);
+
+	if (N != 1) 
+	{
+		uint8 const* DataLength;
+		DataLength = reinterpret_cast<uint8 const*>(&N);
+		ConnectionSocket->Send(DataLength, 4, Sent);
+	}
 
 	Sent = 0;
-	while ((TotalSent < N) && (TimeOut < 3000))
+	while ((TotalSent < N) && (TimeOut < 5000))
 	{
 		TimeOut++;
 		int32 Count = N - TotalSent;
@@ -35,7 +39,7 @@ int UnrealSocketIsar::SendBytes(const void* Buffer, int32 N)
 		}
 	}
 
-	if (TimeOut == 3000)
+	if (TimeOut == 5000)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to send data"));
 	}
@@ -68,6 +72,7 @@ int UnrealSocketIsar::SendObsBytes(const void* Buffer, int32 N)
 
 	if (TimeOut == 3000)
 	{
+		int i = 3;
 		UE_LOG(LogTemp, Error, TEXT("Failed to send data"));
 	}
 

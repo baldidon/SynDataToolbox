@@ -13,29 +13,24 @@ AContinuousActionManagerIsar::AContinuousActionManagerIsar()
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	CameraSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
-	//if (!StaticMesh) {
-		ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshAsset(TEXT("/IsarPlugin/SensorMesh"));  //TODO: USARE UNA MESH SPECIFICA
-		StaticMesh = DuplicateObject(StaticMeshAsset.Object, NULL);
-	//}
-	Mesh->SetStaticMesh(StaticMesh);
-	Mesh->SetRelativeScale3D(FVector(0.5f,0.5f,0.5f));
 	SetRootComponent(Mesh);
+	ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshAsset(TEXT("/IsarPlugin/SensorMesh"));
+	Mesh->SetStaticMesh(StaticMeshAsset.Object);
+	Mesh->SetRelativeScale3D(FVector(0.5f,0.5f,0.5f));
 	CameraSpringArm->SetupAttachment(Mesh);
 	CameraComponent->SetupAttachment(CameraSpringArm);
+	
 	// Create hit
 	ActorHit = new FHitResult();	// Initialize the hit info object
 	
 	CameraSpringArm->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, 50.0f), FRotator(-45.0f, 0.0f, 0.0f));
-	CameraSpringArm->TargetArmLength = 100.f;
-	CameraSpringArm->bEnableCameraLag = true;
-	CameraSpringArm->CameraLagSpeed = 3.0f;
+	CameraSpringArm->TargetArmLength = 300.f;
 }
 
 // Called when the game starts or when spawned
 void AContinuousActionManagerIsar::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
 
 // Called every frame
@@ -59,7 +54,12 @@ void AContinuousActionManagerIsar::SetupPlayerInputComponent(UInputComponent* Pl
 
 const FString AContinuousActionManagerIsar::GetActionManagerName() const
 {
-	return "ContinuousActionManager";
+	return "ContinuousActionManager("+GetActorLabel() + ")";
+}
+
+const FString AContinuousActionManagerIsar::GetActionManagerSetup() const
+{
+	return "TURN,STRAIGHT,GOUP@{}";
 }
 
 const int AContinuousActionManagerIsar::ActionToID(const FString& Action) const
