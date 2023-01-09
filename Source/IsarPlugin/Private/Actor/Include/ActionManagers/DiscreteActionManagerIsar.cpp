@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Actor/Include/ActionManagers/DiscreteActionManagerIsar.h"
+#include "Actor/Include/ActionManagers/DiscreteActionManagerSDT.h"
 
-ADiscreteActionManagerIsar::ADiscreteActionManagerIsar()
+ADiscreteActionManagerSDT::ADiscreteActionManagerSDT()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false; //with respect to a sensor, an action manager can move only if "python sends" a command
@@ -12,7 +12,7 @@ ADiscreteActionManagerIsar::ADiscreteActionManagerIsar()
 	CameraSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	SetRootComponent(Mesh);
-	ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshAsset(TEXT("/IsarPlugin/SensorMesh"));  //TODO: USARE UNA MESH SPECIFICA
+	ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshAsset(TEXT("/SynDataToolbox/SensorMesh"));  
 	Mesh->SetStaticMesh(StaticMeshAsset.Object);
 	Mesh->SetRelativeScale3D(FVector(0.5f, 0.5f, 0.5f));
 	CameraSpringArm->SetupAttachment(Mesh);
@@ -24,43 +24,43 @@ ADiscreteActionManagerIsar::ADiscreteActionManagerIsar()
 	ActorHit = new FHitResult();	// Initialize the hit info object
 }
 
-void ADiscreteActionManagerIsar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void ADiscreteActionManagerSDT::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	PrimaryActorTick.bCanEverTick = false;
 	if (PlayerInputComponent) {
-		PlayerInputComponent->BindAction("TURNL",IE_Pressed, this, &ADiscreteActionManagerIsar::TurnLeftCallback);
-		PlayerInputComponent->BindAction("TURNR",IE_Pressed, this, &ADiscreteActionManagerIsar::TurnRightCallback);
-		PlayerInputComponent->BindAction("FORWARD", IE_Pressed, this, &ADiscreteActionManagerIsar::GoForwardCallback);
-		PlayerInputComponent->BindAction("TURNLFORWARD", IE_Pressed, this, &ADiscreteActionManagerIsar::TurnLeftGoForwardCallback);
-		PlayerInputComponent->BindAction("TURNRFORWARD", IE_Pressed, this, &ADiscreteActionManagerIsar::TurnRightGoForwardCallback);
-		PlayerInputComponent->BindAction("TURNLBACKWARD", IE_Pressed, this, &ADiscreteActionManagerIsar::TurnLeftGoBackwardCallback);
-		PlayerInputComponent->BindAction("TURNRBACKWARD", IE_Pressed, this, &ADiscreteActionManagerIsar::TurnRightGoBackwardCallback);
-		PlayerInputComponent->BindAction("BACKWARD", IE_Pressed, this, &ADiscreteActionManagerIsar::GoBackwardCallback);
+		PlayerInputComponent->BindAction("TURNL",IE_Pressed, this, &ADiscreteActionManagerSDT::TurnLeftCallback);
+		PlayerInputComponent->BindAction("TURNR",IE_Pressed, this, &ADiscreteActionManagerSDT::TurnRightCallback);
+		PlayerInputComponent->BindAction("FORWARD", IE_Pressed, this, &ADiscreteActionManagerSDT::GoForwardCallback);
+		PlayerInputComponent->BindAction("TURNLFORWARD", IE_Pressed, this, &ADiscreteActionManagerSDT::TurnLeftGoForwardCallback);
+		PlayerInputComponent->BindAction("TURNRFORWARD", IE_Pressed, this, &ADiscreteActionManagerSDT::TurnRightGoForwardCallback);
+		PlayerInputComponent->BindAction("TURNLBACKWARD", IE_Pressed, this, &ADiscreteActionManagerSDT::TurnLeftGoBackwardCallback);
+		PlayerInputComponent->BindAction("TURNRBACKWARD", IE_Pressed, this, &ADiscreteActionManagerSDT::TurnRightGoBackwardCallback);
+		PlayerInputComponent->BindAction("BACKWARD", IE_Pressed, this, &ADiscreteActionManagerSDT::GoBackwardCallback);
 	}
 }
 
-void ADiscreteActionManagerIsar::BeginPlay()
+void ADiscreteActionManagerSDT::BeginPlay()
 {
 	Super::BeginPlay();
 }
 
-void ADiscreteActionManagerIsar::Tick(float DeltaTime)
+void ADiscreteActionManagerSDT::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
 
 
-const FString ADiscreteActionManagerIsar::GetActionManagerName() const
+const FString ADiscreteActionManagerSDT::GetActionManagerName() const
 {
 	return "DiscreteActionManager("+GetActorLabel() + ")";
 }
 
-const FString ADiscreteActionManagerIsar::GetActionManagerSetup() const
+const FString ADiscreteActionManagerSDT::GetActionManagerSetup() const
 {
 	return "TURNL,TURNR,FORWARD,TURNRFORWARD,TURNLFORWARD,TURNRBACKWARD,TURNLBACKWARD,BACKWARD,IDLE@{Speed:"+FString::SanitizeFloat(Speed)+",RotationSpeed:"+ FString::SanitizeFloat(Speed)+"}";
 }
 
-const int ADiscreteActionManagerIsar::ActionToID(const FString& Action) const
+const int ADiscreteActionManagerSDT::ActionToID(const FString& Action) const
 {
 	if (Action == "TURNL") return TURNL;
 	else if (Action == "TURNR") return TURNR;
@@ -74,7 +74,7 @@ const int ADiscreteActionManagerIsar::ActionToID(const FString& Action) const
 	else return UNKNOWN;
 }
 
-const bool ADiscreteActionManagerIsar::InitSettings(const TArray<FString>& Settings)
+const bool ADiscreteActionManagerSDT::InitSettings(const TArray<FString>& Settings)
 {
 	if ((Settings.Num() == 2))
 	{
@@ -90,7 +90,7 @@ const bool ADiscreteActionManagerIsar::InitSettings(const TArray<FString>& Setti
 	}
 }
 
-const int8_t ADiscreteActionManagerIsar::PerformAction(TArray<FString>& Action)
+const int8_t ADiscreteActionManagerSDT::PerformAction(TArray<FString>& Action)
 {
 	int8_t PerformActionCode;
 
@@ -149,7 +149,7 @@ const int8_t ADiscreteActionManagerIsar::PerformAction(TArray<FString>& Action)
 
 
 
-const int8_t ADiscreteActionManagerIsar::GoForward()
+const int8_t ADiscreteActionManagerSDT::GoForward()
 {
 	FVector CurrentActorLocation = GetActorLocation();
 	FRotator CurrentActorRotation = GetActorRotation();
@@ -167,7 +167,7 @@ const int8_t ADiscreteActionManagerIsar::GoForward()
 	}
 }
 
-void ADiscreteActionManagerIsar::GoForwardCallback()
+void ADiscreteActionManagerSDT::GoForwardCallback()
 {
 	FVector CurrentActorLocation = GetActorLocation();
 	FRotator CurrentActorRotation = GetActorRotation();
@@ -176,7 +176,7 @@ void ADiscreteActionManagerIsar::GoForwardCallback()
 	SetActorLocation(CurrentActorLocation, true, ActorHit);
 }
 
-const int8_t ADiscreteActionManagerIsar::GoBackward()
+const int8_t ADiscreteActionManagerSDT::GoBackward()
 {
 	FVector CurrentActorLocation = GetActorLocation();
 	FRotator CurrentActorRotation = GetActorRotation();
@@ -194,13 +194,13 @@ const int8_t ADiscreteActionManagerIsar::GoBackward()
 	}
 }
 
-void ADiscreteActionManagerIsar::GoBackwardCallback()
+void ADiscreteActionManagerSDT::GoBackwardCallback()
 {
 	GoBackward();
 }
 
 
-const int8_t ADiscreteActionManagerIsar::TurnRight()
+const int8_t ADiscreteActionManagerSDT::TurnRight()
 {
 	FRotator CurrentActorRotation = GetActorRotation();
 	CurrentActorRotation.Yaw = fmod(CurrentActorRotation.Yaw + RotationSpeed, 360);
@@ -209,12 +209,12 @@ const int8_t ADiscreteActionManagerIsar::TurnRight()
 	return 0;
 }
 
-void ADiscreteActionManagerIsar::TurnRightCallback()
+void ADiscreteActionManagerSDT::TurnRightCallback()
 {
 	TurnRight();
 }
 
-const int8_t ADiscreteActionManagerIsar::TurnLeft()
+const int8_t ADiscreteActionManagerSDT::TurnLeft()
 {
 	FRotator CurrentActorRotation = GetActorRotation();
 	CurrentActorRotation.Yaw = fmod(CurrentActorRotation.Yaw - RotationSpeed, 360);
@@ -223,14 +223,14 @@ const int8_t ADiscreteActionManagerIsar::TurnLeft()
 	return 0;
 }
 
-void ADiscreteActionManagerIsar::TurnLeftCallback()
+void ADiscreteActionManagerSDT::TurnLeftCallback()
 {
 	FRotator CurrentActorRotation = GetActorRotation();
 	CurrentActorRotation.Yaw = fmod(CurrentActorRotation.Yaw - RotationSpeed, 360);
 	SetActorRotation(CurrentActorRotation);
 }
 
-const int8_t ADiscreteActionManagerIsar::TurnRightGoForward()
+const int8_t ADiscreteActionManagerSDT::TurnRightGoForward()
 {
 	FRotator CurrentActorRotation = GetActorRotation();
 	CurrentActorRotation.Yaw = fmod(CurrentActorRotation.Yaw + RotationSpeed, 360);
@@ -251,12 +251,12 @@ const int8_t ADiscreteActionManagerIsar::TurnRightGoForward()
 	}
 }
 
-void ADiscreteActionManagerIsar::TurnRightGoForwardCallback()
+void ADiscreteActionManagerSDT::TurnRightGoForwardCallback()
 {
 	TurnRightGoForward();
 }
 
-const int8_t ADiscreteActionManagerIsar::TurnLeftGoForward()
+const int8_t ADiscreteActionManagerSDT::TurnLeftGoForward()
 {
 	FRotator CurrentActorRotation = GetActorRotation();
 	CurrentActorRotation.Yaw = fmod(CurrentActorRotation.Yaw - RotationSpeed, 360);
@@ -277,12 +277,12 @@ const int8_t ADiscreteActionManagerIsar::TurnLeftGoForward()
 	}
 }
 
-void ADiscreteActionManagerIsar::TurnLeftGoForwardCallback()
+void ADiscreteActionManagerSDT::TurnLeftGoForwardCallback()
 {
 	TurnLeftGoForward();
 }
 
-const int8_t ADiscreteActionManagerIsar::TurnRightGoBackward()
+const int8_t ADiscreteActionManagerSDT::TurnRightGoBackward()
 {
 	FRotator CurrentActorRotation = GetActorRotation();
 	CurrentActorRotation.Yaw = fmod(CurrentActorRotation.Yaw + RotationSpeed, 360);
@@ -303,12 +303,12 @@ const int8_t ADiscreteActionManagerIsar::TurnRightGoBackward()
 	}
 }
 
-void ADiscreteActionManagerIsar::TurnRightGoBackwardCallback()
+void ADiscreteActionManagerSDT::TurnRightGoBackwardCallback()
 {
 	TurnRightGoBackward();
 }
 
-const int8_t ADiscreteActionManagerIsar::TurnLeftGoBackward()
+const int8_t ADiscreteActionManagerSDT::TurnLeftGoBackward()
 {
 	FRotator CurrentActorRotation = GetActorRotation();
 	CurrentActorRotation.Yaw = fmod(CurrentActorRotation.Yaw - RotationSpeed, 360);
@@ -329,19 +329,20 @@ const int8_t ADiscreteActionManagerIsar::TurnLeftGoBackward()
 	}
 }
 
-void ADiscreteActionManagerIsar::TurnLeftGoBackwardCallback()
+void ADiscreteActionManagerSDT::TurnLeftGoBackwardCallback()
 {
 	TurnLeftGoBackward();
 }
 
 
 
-void ADiscreteActionManagerIsar::Possess()
+void ADiscreteActionManagerSDT::Possess()
 {
+	UE_LOG(LogTemp,Warning, TEXT("Controlling: %s"),*GetActionManagerName())
 	GetWorld()->GetFirstPlayerController()->Possess(this);
 }
 
-void ADiscreteActionManagerIsar::UnPossess()
+void ADiscreteActionManagerSDT::UnPossess()
 {
 	GetWorld()->GetFirstPlayerController()->UnPossess();
 }

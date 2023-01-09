@@ -2,6 +2,6 @@
 	"BuildId": "19505902",
 	"Modules": 
 	{
-		"IsarPlugin": "UnrealEditor-IsarPlugin.dll"
+		"SynDataToolbox": "UnrealEditor-SynDataToolbox.dll"
 	}
 }

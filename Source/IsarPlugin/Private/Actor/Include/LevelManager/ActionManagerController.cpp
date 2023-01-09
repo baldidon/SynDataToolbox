@@ -4,7 +4,7 @@ void AActionManagerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	ActionManagers = TArray<IActionManagerIsar*>();
+	ActionManagers = TArray<IActionManagerSDT*>();
 	InputComponent->BindAction("Switch_Up", IE_Pressed, this, &AActionManagerController::SwitchUp);
 	InputComponent->BindAction("Switch_Down", IE_Pressed, this, &AActionManagerController::SwitchDown);
 	InputComponent->BindAction("Restore_Default", IE_Pressed, this, &AActionManagerController::RestoreDefaultPawn);
@@ -52,7 +52,7 @@ void AActionManagerController::RestoreDefaultPawn()
 	Possess(DefaultPawn);
 }
 
-void AActionManagerController::SetupActorListToPossess(TArray<IActionManagerIsar*> ActionManagerList)
+void AActionManagerController::SetupActorListToPossess(TArray<IActionManagerSDT*> ActionManagerList)
 {
 	for (auto AManager : ActionManagerList) {
 		ActionManagers.Add(AManager);

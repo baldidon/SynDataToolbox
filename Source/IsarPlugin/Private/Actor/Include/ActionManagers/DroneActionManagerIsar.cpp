@@ -1,22 +1,21 @@
-#include "Actor/Include/ActionManagers/DroneActionManagerIsar.h"
+#include "Actor/Include/ActionManagers/DroneActionManagerSDT.h"
 #include <Misc/OutputDeviceNull.h>
 
-ADroneActionManagerIsar::ADroneActionManagerIsar() 
+ADroneActionManagerSDT::ADroneActionManagerSDT()
 {
 	PrimaryActorTick.bCanEverTick = false; //with respect to a sensor, an action manager can move only if "python sends" a command
 
-	//qui ha senso definire una shape di base
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	SetRootComponent(Mesh);
 
-	static ConstructorHelpers::FObjectFinder<UBlueprint> BPDrone(TEXT("Blueprint'/IsarPlugin/PhysQuad/Blueprints/BP_Drone'"));
+	static ConstructorHelpers::FObjectFinder<UBlueprint> BPDrone(TEXT("Blueprint'/SynDataToolbox/PhysQuad/Blueprints/BP_Drone'"));
 	if (BPDrone.Object) {
 		PawnToSpawn = BPDrone.Object->GeneratedClass;
 	}
 	//create hit
 	ActorHit = new FHitResult();  //init the info object
 }
-void ADroneActionManagerIsar::BeginPlay()
+void ADroneActionManagerSDT::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -26,40 +25,24 @@ void ADroneActionManagerIsar::BeginPlay()
 	}
 }
 
-//void ADroneActionManagerIsar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-//{
-//	if (PlayerInputComponent) {
-//		Super::SetupPlayerInputComponent(PlayerInputComponent);
-//
-//		FBoolProperty *Manual = FindFProperty<FBoolProperty>(Drone->GetClass(), TEXT("Manual"));
-//		Manual->SetPropertyValue_InContainer(Drone, true);
-//		FBoolProperty* Enabled = FindFProperty<FBoolProperty>(Drone->GetClass(), TEXT("Enabled"));
-//		Enabled->SetPropertyValue_InContainer(Drone, true);
-//
-//		FBoolProperty* Crashed = FindFProperty<FBoolProperty>(Drone->GetClass(), TEXT("Crashed"));
-//		if (Crashed->GetPropertyValue(Drone)) {
-//			Crashed->SetPropertyValue_InContainer(Drone, false);
-//
-//		}
-//		//PlayerInputComponent->BindAxis(FName("Throttle"), this, &ADroneActionManagerIsar::ThrottleCallback);
-//		//PlayerInputComponent->BindAxis(FName("Pitch"), this, &ADroneActionManagerIsar::PitchCallback);
-//		//PlayerInputComponent->BindAxis(FName("Yaw"), this, &ADroneActionManagerIsar::YawCallback);
-//		//PlayerInputComponent->BindAxis(FName("Roll"), this, &ADroneActionManagerIsar::RollCallback);
-//	}
-//}
 
-void ADroneActionManagerIsar::Tick(float DeltaTime)
+void ADroneActionManagerSDT::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
 
 
-const FString ADroneActionManagerIsar::GetActionManagerName() const
+const FString ADroneActionManagerSDT::GetActionManagerName() const
 {
 	return "DroneActionManager("+GetActorLabel() + ")";
 }
 
-const int ADroneActionManagerIsar::ActionToID(const FString& Action) const
+const FString ADroneActionManagerSDT::GetActionManagerSetup() const
+{
+	return FString("THROTTLE,PITCH,YAW,ROLL@{}");
+}
+
+const int ADroneActionManagerSDT::ActionToID(const FString& Action) const
 {
 	if (Action == "THROTTLE") return THROTTLE;
 	else if (Action == "PITCH") return PITCH;
@@ -68,7 +51,7 @@ const int ADroneActionManagerIsar::ActionToID(const FString& Action) const
 	else return UNKNOWN;
 }
 
-const bool ADroneActionManagerIsar::InitSettings(const TArray<FString>& Settings)
+const bool ADroneActionManagerSDT::InitSettings(const TArray<FString>& Settings)
 {
 	if ((Settings.Num() == 0))
 	{
@@ -81,7 +64,7 @@ const bool ADroneActionManagerIsar::InitSettings(const TArray<FString>& Settings
 	}
 }
 
-const int8_t ADroneActionManagerIsar::PerformAction(TArray<FString>& Action)
+const int8_t ADroneActionManagerSDT::PerformAction(TArray<FString>& Action)
 {
 	int8_t PerformActionCode;
 
@@ -120,7 +103,7 @@ const int8_t ADroneActionManagerIsar::PerformAction(TArray<FString>& Action)
 	return PerformActionCode;
 }
 
-void ADroneActionManagerIsar::Possess()
+void ADroneActionManagerSDT::Possess()
 {
 	FBoolProperty* Manual = FindFProperty<FBoolProperty>(Drone->GetClass(), TEXT("Manual"));
 	Manual->SetPropertyValue_InContainer(Drone, true);
@@ -132,16 +115,17 @@ void ADroneActionManagerIsar::Possess()
 		Crashed->SetPropertyValue_InContainer(Drone, false);
 
 	}
+	UE_LOG(LogTemp, Warning, TEXT("Controlling: %s"), *GetActionManagerName())
 	GetWorld()->GetFirstPlayerController()->Possess(Drone);
 }
 
-void ADroneActionManagerIsar::UnPossess()
+void ADroneActionManagerSDT::UnPossess()
 {
 	GetWorld()->GetFirstPlayerController()->UnPossess();
 
 }
 
-const int8_t ADroneActionManagerIsar::Throttle(TArray<FString>& ActionSettings) const
+const int8_t ADroneActionManagerSDT::Throttle(TArray<FString>& ActionSettings) const
 {
 	const float Power = FCString::Atof(*ActionSettings[0]);
 	ActionSettings.RemoveAt(0);
@@ -162,18 +146,8 @@ const int8_t ADroneActionManagerIsar::Throttle(TArray<FString>& ActionSettings) 
 	}
 }
 
-//void ADroneActionManagerIsar::ThrottleCallback(float Power) {
-//	if (Drone) {
-//		//FBoolProperty *Enabled = FindFProperty<FBoolProperty>(Drone->GetClass(), TEXT("Enabled"));
-//		//Enabled->SetPropertyValue_InContainer(Drone, true);
-//		FDoubleProperty* ThrottlePower = FindFProperty<FDoubleProperty>(Drone->GetClass(), TEXT("ThrottlePower"));
-//		ThrottlePower->SetPropertyValue_InContainer(Drone, Power);
-//		UE_LOG(LogTemp, Error, TEXT("Power %f"), ThrottlePower->GetPropertyValue_InContainer(Drone))
-//		//Enabled->SetPropertyValue_InContainer(Drone, false);
-//	}
-//}
 
-const int8_t ADroneActionManagerIsar::Pitch(TArray<FString>& ActionSettings) const
+const int8_t ADroneActionManagerSDT::Pitch(TArray<FString>& ActionSettings) const
 {
 	const float Power = FCString::Atof(*ActionSettings[0]);
 	ActionSettings.RemoveAt(0);
@@ -197,14 +171,8 @@ const int8_t ADroneActionManagerIsar::Pitch(TArray<FString>& ActionSettings) con
 	}
 }
 
-//void ADroneActionManagerIsar::PitchCallback(float PitchValue)
-//{
-//	FDoubleProperty* Power = FindFProperty<FDoubleProperty>(Drone->GetClass(), TEXT("PitchPower"));
-//	Power->SetPropertyValue_InContainer(Drone, PitchValue);
-//	UE_LOG(LogTemp, Error, TEXT("Pitch %f"), Power->GetPropertyValue_InContainer(Drone))
-//}
 
-const int8_t ADroneActionManagerIsar::Yaw(TArray<FString>& ActionSettings) const
+const int8_t ADroneActionManagerSDT::Yaw(TArray<FString>& ActionSettings) const
 {
 	const float Power = FCString::Atof(*ActionSettings[0]);
 	ActionSettings.RemoveAt(0);
@@ -229,14 +197,8 @@ const int8_t ADroneActionManagerIsar::Yaw(TArray<FString>& ActionSettings) const
 	}
 }
 
-//void ADroneActionManagerIsar::YawCallback(float YawValue)
-//{
-//	FDoubleProperty* Power = FindFProperty<FDoubleProperty>(Drone->GetClass(), TEXT("YawPower"));
-//	Power->SetPropertyValue_InContainer(Drone, YawValue);
-//	UE_LOG(LogTemp, Error, TEXT("Yaw %f"), Power->GetPropertyValue_InContainer(Drone))
-//}
 
-const int8_t ADroneActionManagerIsar::Roll(TArray<FString>& ActionSettings) const
+const int8_t ADroneActionManagerSDT::Roll(TArray<FString>& ActionSettings) const
 {
 	const float Power = FCString::Atof(*ActionSettings[0]);
 	ActionSettings.RemoveAt(0);
@@ -259,12 +221,4 @@ const int8_t ADroneActionManagerIsar::Roll(TArray<FString>& ActionSettings) cons
 		return 0;
 	}
 }
-
-//void ADroneActionManagerIsar::RollCallback(float RollValue)
-//{
-//
-//	FDoubleProperty* Power = FindFProperty<FDoubleProperty>(Drone->GetClass(), TEXT("RollPower"));
-//	Power->SetPropertyValue_InContainer(Drone, RollValue);
-//	UE_LOG(LogTemp, Error, TEXT("Roll %f"), Power->GetPropertyValue_InContainer(Drone))
-//}
 
