@@ -1,2 +1,2 @@
-# Syn Data Toolbox
-*A Unreal Engine 5 plugin with tools for Machine Learning*
+# Syn Data Toolbox - Data Generator
+*A Unreal Engine 5 plugin with tools for Machine Learning*.
